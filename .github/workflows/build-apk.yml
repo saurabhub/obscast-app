@@ -1,36 +1,38 @@
 name: Build OBSCast APK
+
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
   workflow_dispatch:
-jobs:
-  build-apk:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
         with:
+          distribution: temurin
           java-version: '17'
-          distribution: 'temurin'
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Extract ZIP and Build
+      - name: Extract ZIP
+        run: unzip OBSCast_GitHub_Upload.zip
+
+      - name: Find Gradle Project
         run: |
-          unzip OBSCast_GitHub_Upload.zip -d ext
-          cd ext
-          find . -name "gradlew" -type f
-          GRADLE=$(find . -name "gradlew" | head -1)
-          DIR=$(dirname "$GRADLE")
-          chmod +x "$GRADLE"
-          cd "$DIR"
-          ./gradlew assembleDebug --stacktrace
+          chmod +x */gradlew
+          cd */
+          ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: OBSCast-v1.0-debug
-          path: ext/**/app-debug.apk
-          retention-days: 30
+          name: OBSCast-debug
+          path: "**/*.apk"
